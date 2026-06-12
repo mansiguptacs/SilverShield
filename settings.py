@@ -41,6 +41,25 @@ SEED_NDCS_PATH = DATA_DIR / "seed_ndcs.json"
 PHARMACIES_CSV = DATA_DIR / "pharmacies.csv"
 CUSTOMERS_CSV = DATA_DIR / "customers.csv"
 
+# ---------- Twilio (optional real demo SMS) ----------
+# When all four are set, the dispatch stage ALSO sends one real SMS to the
+# designated demo phone, while the full cohort stays simulated. Safe no-op otherwise.
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
+TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "").strip()
+DEMO_ALERT_TO = os.getenv("DEMO_ALERT_TO", "").strip()
+# Trial accounts can't send custom SMS text - they must pass a predefined template id
+# (e.g. sms_account_alerts). Set this to send a real SMS on a trial account; leave
+# empty on an UPGRADED account to send our full custom recall message.
+TWILIO_TRIAL_TEMPLATE = os.getenv("TWILIO_TRIAL_TEMPLATE", "").strip()
+
+# Delivery channel for the real demo alert: "sms" or "whatsapp".
+# WhatsApp Sandbox sends our FULL custom text for free, but the recipient must first
+# text "join <code>" to the sandbox number to open a 24h messaging window.
+ALERT_CHANNEL = os.getenv("ALERT_CHANNEL", "sms").strip().lower()
+# Twilio WhatsApp Sandbox number (default is Twilio's shared sandbox).
+TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM", "+14155238886").strip()
+
 # ---------- OpenAI / agents ----------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")

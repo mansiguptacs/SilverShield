@@ -202,13 +202,13 @@
       <div class="reveal">
         <span class="kicker">Autonomous Consumer Defense &middot; Hackathon 2026</span>
         <h1>FDA <span class="gradient">SafetyNet</span></h1>
-        <p class="lede">The FDA recalls dangerous drugs every day &mdash; but the warning almost never reaches the person holding the bottle. <b>SafetyNet</b> catches every recall the instant it&rsquo;s published and alerts the exact people who bought it, nationwide, in seconds.</p>
+        <p class="lede">The FDA recalls dangerous drugs every day &mdash; but the warning almost never reaches the person holding the bottle. <b>SafetyNet</b> catches every recall the instant it&rsquo;s published and alerts the exact people who bought it, nationwide, in seconds. <b>Live & working today.</b></p>
         <div class="chips">
           <span class="chip"><span class="dot"></span> Airbyte</span>
           <span class="chip"><span class="dot"></span> ClickHouse</span>
           <span class="chip"><span class="dot"></span> Guild.ai</span>
           <span class="chip"><span class="dot"></span> OpenUI</span>
-          <span class="chip"><span class="dot"></span> OpenAI Agents SDK</span>
+          <span class="chip"><span class="dot"></span> FastAPI + React</span>
         </div>
       </div>
     </section>
@@ -231,49 +231,47 @@
     <section class="slide">
       <div class="reveal">
         <span class="kicker">How It Works</span>
-        <h2>One recall &rarr; nationwide alerts, in one continuous flow.</h2>
+        <h2>One recall &rarr; nationwide alerts, fully autonomous.</h2>
         <div class="pipe">
           <div class="step"><div class="n">1</div><h4>Ingest</h4><p>PyAirbyte pulls live openFDA recalls.</p><span class="arrow">&#10140;</span></div>
-          <div class="step"><div class="n">2</div><h4>Match</h4><p>ClickHouse MV joins NDC &rarr; customers.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">2</div><h4>Match</h4><p>ClickHouse MV fires on insert.</p><span class="arrow">&#10140;</span></div>
           <div class="step"><div class="n">3</div><h4>Classify</h4><p>ML scores severity from reason text.</p><span class="arrow">&#10140;</span></div>
-          <div class="step"><div class="n">4</div><h4>Decide</h4><p>Agents triage & draft outreach.</p><span class="arrow">&#10140;</span></div>
-          <div class="step"><div class="n">5</div><h4>Dispatch</h4><p>Cohort alerted; OpenUI card rendered.</p></div>
+          <div class="step"><div class="n">4</div><h4>Cohort</h4><p>Affected patients found nationwide.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">5</div><h4>Dispatch</h4><p>Severity-aware alerts sent.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">6</div><h4>Render + Cite</h4><p>OpenUI card + cited.md trail.</p></div>
         </div>
-        <div class="two-col" style="margin-top:30px;">
-          <div class="panel">
-            <h3>&#9881;&#65039; Deterministic backbone</h3>
-            <p style="color:var(--muted);font-size:15px;line-height:1.5;">PyAirbyte &rarr; ClickHouse, with the materialized view as an instant match trigger. Fast, reliable, no LLM in the hot path.</p>
-          </div>
-          <div class="panel">
-            <h3>&#129302; Reasoning agents</h3>
-            <p style="color:var(--muted);font-size:15px;line-height:1.5;">OpenAI Agents SDK: a Supervisor hands off to Triage, Outreach & Presenter &mdash; reasoning only over de-identified cohort data, never PII.</p>
-          </div>
+        <p class="lede" style="margin-top:26px;">A <b>deterministic orchestrator</b> drives the hot path &mdash; fast and reliable, no LLM in the loop except the live OpenUI card render. Every stage streams over WebSocket to the live dashboard.</p>
+        <div class="cards c4" style="margin-top:8px;">
+          <div class="card"><span class="tag">ClickHouse</span><h3>&lt;0.3s</h3><p>recall &rarr; matched cohort at 1M rows.</p></div>
+          <div class="card"><span class="tag">Airbyte</span><h3>0 dupes</h3><p>2nd sync inserts nothing &mdash; true incremental.</p></div>
+          <div class="card"><span class="tag">Guild.ai</span><h3>0.79 F1</h3><p>SVD cuts feature correlation 0.12 &rarr; 0.001.</p></div>
+          <div class="card"><span class="tag">OpenUI</span><h3>gpt-4o-mini</h3><p>patient alert card generated live.</p></div>
         </div>
       </div>
     </section>
 
-    <!-- 4 SCALE + LIVE MAP (~45s, the wow) -->
+    <!-- 4 WHAT WE BUILT - REAL DASHBOARD (~50s, the wow) -->
     <section class="slide">
       <div class="reveal">
-        <span class="kicker">National Scale &middot; Live Demo</span>
-        <h2>Built to defend a country, not a demo.</h2>
-        <div class="map-wrap">
-          <div class="map-stage" id="mapStage">
-            <span class="map-label">Live fan-out &mdash; pharmacies lighting up as a recall propagates</span>
-          </div>
+        <span class="kicker">What We Built &middot; Live Today</span>
+        <h2>The whole pipeline, working on real openFDA data.</h2>
+        <div class="map-wrap" style="grid-template-columns:1.55fr 1fr;">
+          <img src="dashboard.png" alt="FDA SafetyNet live dashboard"
+               style="width:100%;border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);" />
           <div>
-            <ul class="clean">
-              <li><span class="b">&#9679;</span><span>One recall fans out to every affected location <b>in seconds</b>.</span></li>
-              <li><span class="b">&#9679;</span><span>ClickHouse does the join + geo rollup <b>sub-second</b> at 1M+ rows.</span></li>
-              <li><span class="b">&#9679;</span><span>Watch it live: the trace lights up stage by stage and the map lights up by state.</span></li>
+            <ul class="clean" style="margin-top:0;">
+              <li><span class="b">&#9679;</span><span>Live US map lights up by state as one recall fans out.</span></li>
+              <li><span class="b">&#9679;</span><span>8-stage trace animates: ingest &rarr; severity &rarr; cohort &rarr; dispatch &rarr; cited.</span></li>
+              <li><span class="b">&#9679;</span><span>Real example: recall <b>D-0353-2026</b> &rarr; <b>605 patients</b>, 49 states, 567 pharmacies.</span></li>
+              <li><span class="b">&#9679;</span><span>Patient-facing alert card generated live by OpenUI.</span></li>
             </ul>
           </div>
         </div>
         <div class="stats">
           <div class="stat"><div class="num">5,000</div><div class="lbl">Pharmacies</div></div>
-          <div class="stat"><div class="num">1M+</div><div class="lbl">Customer records</div></div>
-          <div class="stat"><div class="num">50</div><div class="lbl">States covered</div></div>
-          <div class="stat"><div class="num">&lt;1s</div><div class="lbl">Match latency</div></div>
+          <div class="stat"><div class="num">1M</div><div class="lbl">Patients indexed</div></div>
+          <div class="stat"><div class="num">51</div><div class="lbl">States + DC</div></div>
+          <div class="stat"><div class="num">75K+</div><div class="lbl">Matches found</div></div>
         </div>
       </div>
     </section>
@@ -284,12 +282,12 @@
         <span class="kicker">Why We Win</span>
         <h1 style="font-size:clamp(34px,5.5vw,68px);">When a recall drops,<br><span class="gradient">no one is left in the dark.</span></h1>
         <div class="cards c4" style="margin-top:26px;">
-          <div class="card"><span class="badge win">ClickHouse</span><p style="margin-top:10px;">National match engine via materialized views at 1M+ scale.</p></div>
+          <div class="card"><span class="badge win">ClickHouse</span><p style="margin-top:10px;">Materialized view as a national match engine &mdash; &lt;0.3s at 1M rows.</p></div>
           <div class="card"><span class="badge win">Airbyte</span><p style="margin-top:10px;">Declarative incremental ingestion &mdash; not a request loop.</p></div>
-          <div class="card"><span class="badge win">Guild.ai</span><p style="margin-top:10px;">Tracked severity-model sweeps + agentic MLOps.</p></div>
-          <div class="card"><span class="badge win">OpenUI</span><p style="margin-top:10px;">Severity-aware alert cards generated at runtime.</p></div>
+          <div class="card"><span class="badge win">Guild.ai</span><p style="margin-top:10px;">Tracked severity-model sweeps with real MLOps rigor.</p></div>
+          <div class="card"><span class="badge win">OpenUI</span><p style="margin-top:10px;">Severity-aware patient alert cards generated at runtime.</p></div>
         </div>
-        <p class="lede" style="margin-top:24px;">Privacy-by-design, cloud-portable, and demoable today. <b>Thank you &mdash; let&rsquo;s run it live.</b></p>
+        <p class="lede" style="margin-top:24px;">Privacy-by-design (PII never leaves the data layer), cloud-portable, and <b>demoable right now</b>. Next up: OpenAI Agents SDK layer + cloud deploy. <b>Thank you &mdash; let&rsquo;s run it live.</b></p>
       </div>
     </section>
 

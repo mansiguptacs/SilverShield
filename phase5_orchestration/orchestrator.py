@@ -18,7 +18,7 @@ sys.path.append(str(ROOT))
 
 from phase4_ml.predict import classify  # noqa: E402
 from phase5_orchestration.events import Event, bus  # noqa: E402
-from phase5_orchestration.tools import clickhouse_tools, sms_stub  # noqa: E402
+from phase5_orchestration.tools import clickhouse_tools, real_alert, sms_stub  # noqa: E402
 from phase5_orchestration.tools.cite import cite  # noqa: E402
 from phase5_orchestration.tools.openui_client import render_alert_card  # noqa: E402
 
@@ -80,11 +80,15 @@ async def process_recall(recall: dict) -> None:
     # Dispatch to the cohort. Only de-identified aggregates leave the data layer -
     # patient names / phone numbers never reach the event bus or the UI.
     result = sms_stub.dispatch_to_cohort(rn, severity, recall["recalling_firm"], recall["product_ndc"])
+    # Additionally fire ONE real SMS to a designated demo phone (no-op if unconfigured).
+    demo_alert = real_alert.send_demo_sms(severity, recall["recalling_firm"],
+                                          recall["product_ndc"], rn)
     await _emit("dispatched", rn, {
         "channel": result["channel"],
         "dispatched": result["dispatched"],
         "pharmacies_notified": result["pharmacies_notified"],
         "states": result["states"],
+        "demo_alert": demo_alert,
     })
 
     # Runtime OpenUI alert card.
