@@ -53,12 +53,19 @@ DEMO_ALERT_TO = os.getenv("DEMO_ALERT_TO", "").strip()
 # empty on an UPGRADED account to send our full custom recall message.
 TWILIO_TRIAL_TEMPLATE = os.getenv("TWILIO_TRIAL_TEMPLATE", "").strip()
 
-# Delivery channel for the real demo alert: "sms" or "whatsapp".
-# WhatsApp Sandbox sends our FULL custom text for free, but the recipient must first
-# text "join <code>" to the sandbox number to open a 24h messaging window.
+# Delivery channel for the real demo alert: "sms", "whatsapp", "callmebot", or "telegram".
+#  - sms/whatsapp  -> Twilio (trial = template only; upgraded = full custom text)
+#  - callmebot     -> free WhatsApp relay that sends our FULL custom text (no Twilio)
+#  - telegram      -> free Telegram bot that sends our FULL custom text (no Twilio)
 ALERT_CHANNEL = os.getenv("ALERT_CHANNEL", "sms").strip().lower()
 # Twilio WhatsApp Sandbox number (default is Twilio's shared sandbox).
 TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM", "+14155238886").strip()
+# CallMeBot WhatsApp API key (free; obtained via a one-time opt-in message). Sends to DEMO_ALERT_TO.
+CALLMEBOT_APIKEY = os.getenv("CALLMEBOT_APIKEY", "").strip()
+# Telegram bot (free, full custom text). Create a bot with @BotFather for the token,
+# then the recipient sends /start to the bot; TELEGRAM_CHAT_ID is their chat id.
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
 # ---------- OpenAI / agents ----------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()

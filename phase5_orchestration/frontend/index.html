@@ -348,7 +348,7 @@ function StageGrid({ rec, activeCard }) {
           </div>
           <div class="privacy"><span>\uD83D\uDD12</span><span>De-identified: patient names & numbers never leave the secure data layer.</span></div>
           ${r.dispatch.demoAlert && r.dispatch.demoAlert.sent ? html`<div class="livesms">
-            <span>\uD83D\uDCF1</span><span>Live emergency SMS delivered to demo device ${r.dispatch.demoAlert.to||""}</span></div>` : ""}
+            <span>\uD83D\uDCF1</span><span>Live emergency alert delivered to demo device</span></div>` : ""}
         </div>` : html`<div class="stage-wait">Dispatching\u2026</div>`}
       </div>` : html`<div class="stage-wait">Awaiting severity to draft the alert\u2026</div>`}
     </${StageCard}>

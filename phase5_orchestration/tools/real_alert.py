@@ -20,7 +20,10 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT))
 from settings import (  # noqa: E402
     ALERT_CHANNEL,
+    CALLMEBOT_APIKEY,
     DEMO_ALERT_TO,
+    TELEGRAM_BOT_TOKEN,
+    TELEGRAM_CHAT_ID,
     TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN,
     TWILIO_FROM_NUMBER,
@@ -42,11 +45,65 @@ def _mask(number: str) -> str:
 
 
 def is_configured() -> bool:
+    if ALERT_CHANNEL == "telegram":
+        return bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
+    if ALERT_CHANNEL == "callmebot":
+        return bool(CALLMEBOT_APIKEY and DEMO_ALERT_TO)
     if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and DEMO_ALERT_TO):
         return False
     if ALERT_CHANNEL == "whatsapp":
         return bool(TWILIO_WHATSAPP_FROM)
     return bool(TWILIO_FROM_NUMBER)
+
+
+def _send_telegram(body: str) -> dict:
+    """Free delivery via a Telegram bot. Sends our full custom text to TELEGRAM_CHAT_ID."""
+    import requests
+
+    resp = requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+        json={"chat_id": TELEGRAM_CHAT_ID, "text": body},
+        timeout=25,
+    )
+    if resp.ok and resp.json().get("ok"):
+        return {"sent": True, "channel": "telegram", "mode": "custom",
+                "to": f"chat {TELEGRAM_CHAT_ID}"}
+    return {"sent": False, "channel": "telegram", "mode": "custom",
+            "reason": f"HTTP {resp.status_code}: {resp.text[:160]}"}
+
+
+def resolve_chat_id() -> dict:
+    """Helper: read the latest chat id that messaged the bot (run after sending /start)."""
+    import requests
+
+    resp = requests.get(
+        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates", timeout=25
+    )
+    data = resp.json()
+    ids = []
+    for u in data.get("result", []):
+        msg = u.get("message") or u.get("edited_message") or {}
+        chat = msg.get("chat") or {}
+        if chat.get("id") is not None:
+            ids.append((chat["id"], chat.get("first_name") or chat.get("title") or ""))
+    return {"ok": data.get("ok", False), "chats": ids}
+
+
+def _send_callmebot(body: str) -> dict:
+    """Free WhatsApp delivery via CallMeBot. Sends our full custom text to DEMO_ALERT_TO."""
+    import requests
+
+    resp = requests.get(
+        "https://api.callmebot.com/whatsapp.php",
+        params={"phone": DEMO_ALERT_TO, "text": body, "apikey": CALLMEBOT_APIKEY},
+        timeout=25,
+    )
+    text = (resp.text or "").lower()
+    ok = resp.ok and ("queued" in text or "sent" in text or "message" in text and "error" not in text)
+    if ok:
+        return {"sent": True, "channel": "whatsapp", "mode": "callmebot", "to": _mask(DEMO_ALERT_TO)}
+    return {"sent": False, "channel": "whatsapp", "mode": "callmebot",
+            "reason": f"HTTP {resp.status_code}: {resp.text[:160]}"}
 
 
 def build_emergency_sms(severity: str, recalling_firm: str, product_ndc: str,
@@ -72,10 +129,17 @@ def send_demo_sms(severity: str, recalling_firm: str, product_ndc: str,
     if not is_configured():
         return {"sent": False, "channel": "twilio", "reason": "not_configured"}
     try:
+        custom = build_emergency_sms(severity, recalling_firm, product_ndc, recall_number)
+
+        if ALERT_CHANNEL == "telegram":
+            return _send_telegram(custom)
+
+        if ALERT_CHANNEL == "callmebot":
+            return _send_callmebot(custom)
+
         from twilio.rest import Client
 
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-        custom = build_emergency_sms(severity, recalling_firm, product_ndc, recall_number)
 
         if ALERT_CHANNEL == "whatsapp":
             # WhatsApp Sandbox allows free-form custom text within the 24h window that
