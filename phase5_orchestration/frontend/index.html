@@ -43,7 +43,7 @@
   .step.active .lbl, .step.done .lbl { color:var(--txt); }
   .step .val { font-size:10.5px; color:var(--accent); font-weight:700; margin-top:2px; height:13px; }
 
-  main { display:grid; grid-template-columns:0.92fr 1.08fr; gap:16px; padding:14px 24px; min-height:0; }
+  main { display:grid; grid-template-columns:1fr 0.96fr 0.72fr; gap:15px; padding:14px 24px; min-height:0; }
   .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
           display:flex; flex-direction:column; min-height:0; overflow:hidden; }
   .card > h3 { margin:0; padding:13px 18px; font-size:12px; text-transform:uppercase; letter-spacing:.07em;
@@ -89,7 +89,10 @@
   .panel { scroll-margin:14px; }
 
   /* fixed single-recall stage grid */
-  .stages { display:flex; flex-direction:column; gap:13px; min-height:0; overflow-y:auto; }
+  .stages { display:flex; flex-direction:column; gap:13px; min-height:0; overflow-y:auto; padding-right:4px; }
+  .stages > .stage { flex:0 0 auto; }
+  .alert-col { display:flex; flex-direction:column; min-height:0; }
+  .alert-col .stage { flex:1 1 auto; }
   .srow { display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:0 0 auto; }
   .stage { background:var(--panel); border:1.5px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
            display:flex; flex-direction:column; min-height:0; overflow:hidden; transition:border-color .3s, box-shadow .3s; }
@@ -104,7 +107,7 @@
                 background:rgba(37,99,235,.1); padding:3px 8px; border-radius:20px; animation:blink 1.1s infinite; }
   .stage-done-tag { margin-left:auto; font-size:9.5px; font-weight:800; color:#16a34a; letter-spacing:.04em; }
   @keyframes blink { 50%{opacity:.4;} }
-  .stage-body { padding:11px 14px; overflow:hidden; flex:1; min-height:0; }
+  .stage-body { padding:11px 14px; overflow:visible; flex:1; min-height:0; }
   .stage.tall { flex:1 1 auto; min-height:200px; }
   .stage.tall .stage-body { overflow-y:auto; }
   .stage-wait { font-size:12px; color:var(--soft); font-style:italic; margin-top:2px; }
@@ -295,64 +298,67 @@ function StageGrid({ rec, activeCard }) {
   const st = (id, filled) => activeCard===id ? "active" : (rec && filled) ? "done" : "waiting";
 
   return html`<div class="stages">
-    <div class="srow">
-      <${StageCard} n="1" color="#e5484d" title="The FDA recall" sub="raw record from openFDA" status=${st("recall",r.firm)}>
-        <div class="explain"><span class="ei">\uD83D\uDCE1</span>The recall as the FDA published it.</div>
-        ${r.firm ? html`<div>
-          <div class="kv">Firm: <b>${r.firm}</b> \u00b7 NDC <b>${r.ndc}</b></div>
-          <div class="reason-box">${r.reason}</div>
-          ${r.sourceUrl?html`<a class="src-link" href=${r.sourceUrl} target="_blank" rel="noopener">\u2197 View this recall on openFDA</a>`:""}
-        </div>` : html`<div class="stage-wait">Waiting to pull the recall\u2026</div>`}
-      </${StageCard}>
+    <${StageCard} n="1" color="#e5484d" title="The FDA recall" sub="raw record from openFDA" status=${st("recall",r.firm)}>
+      <div class="explain"><span class="ei">\uD83D\uDCE1</span>The recall as the FDA published it.</div>
+      ${r.firm ? html`<div>
+        <div class="kv">Firm: <b>${r.firm}</b> \u00b7 NDC <b>${r.ndc}</b></div>
+        <div class="reason-box">${r.reason}</div>
+        ${r.sourceUrl?html`<a class="src-link" href=${r.sourceUrl} target="_blank" rel="noopener">\u2197 View this recall on openFDA</a>`:""}
+      </div>` : html`<div class="stage-wait">Waiting to pull the recall\u2026</div>`}
+    </${StageCard}>
 
-      <${StageCard} n="2" color="#e5484d" title="How dangerous is it?" sub="ML severity classifier" status=${st("severity",r.severity)}>
-        <div class="explain"><span class="ei">\uD83E\uDDE0</span>ML model rates the danger from the reason text.</div>
-        ${r.severity ? html`<div>
-          ${r.proba ? html`<div class="proba">
-            ${PROBA_ORDER.map(k=>{const v=(r.proba[k]||0); return html`<div class="proba-row" key=${k}>
-              <span class="pl" style=${{color:SEV[k]}}>${k}</span>
-              <span class="pt"><span class="pf" style=${{width:Math.round(v*100)+"%",background:SEV[k]}}></span></span>
-              <span class="pv">${Math.round(v*100)}%</span></div>`;})}
-          </div>` : ""}
-          <div style=${{marginTop:"9px"}}>
-            <span class="sev-badge" style=${{background:sev}}>\u2192 ${r.severity}</span>
-            <span class="kv" style=${{marginLeft:"8px"}}>via TF-IDF\u2192SVD\u2192LogReg</span>
+    <${StageCard} n="2" color="#e5484d" title="How dangerous is it?" sub="ML severity classifier" status=${st("severity",r.severity)}>
+      <div class="explain"><span class="ei">\uD83E\uDDE0</span>ML model rates the danger from the reason text.</div>
+      ${r.severity ? html`<div>
+        ${r.proba ? html`<div class="proba">
+          ${PROBA_ORDER.map(k=>{const v=(r.proba[k]||0); return html`<div class="proba-row" key=${k}>
+            <span class="pl" style=${{color:SEV[k]}}>${k}</span>
+            <span class="pt"><span class="pf" style=${{width:Math.round(v*100)+"%",background:SEV[k]}}></span></span>
+            <span class="pv">${Math.round(v*100)}%</span></div>`;})}
+        </div>` : ""}
+        <div style=${{marginTop:"9px"}}>
+          <span class="sev-badge" style=${{background:sev}}>\u2192 ${r.severity}</span>
+          <span class="kv" style=${{marginLeft:"8px"}}>via TF-IDF\u2192SVD\u2192LogReg</span>
+        </div>
+      </div>` : html`<div class="stage-wait">Awaiting the recall text to classify\u2026</div>`}
+    </${StageCard}>
+
+    <${StageCard} n="3" color="#7c3aed" title="Who is affected?" sub="cohort match nationwide" status=${st("cohort",r.cohort)}>
+      <div class="explain"><span class="ei">\uD83C\uDFE5</span>Matched against 1,000,000 patient prescriptions.</div>
+      ${r.cohort ? html`<div>
+        <span class="bignum" style=${{color:sev}}><${CountUp} value=${r.cohort.customers} /></span>
+        <span class="kv" style=${{marginLeft:"8px"}}>patients on this medication</span>
+        <div class="statrow">
+          <div><div class="v"><${CountUp} value=${r.cohort.states} /></div><div class="l">states</div></div>
+          <div><div class="v"><${CountUp} value=${r.cohort.pharmacies} /></div><div class="l">pharmacies</div></div>
+        </div></div>` : html`<div class="stage-wait">Awaiting cohort match\u2026</div>`}
+    </${StageCard}>
+
+    <${StageCard} n="4" color="#16a34a" title="Alert the patients" sub="severity-aware dispatch" status=${st("outreach",r.dispatch)}>
+      <div class="explain"><span class="ei">\uD83D\uDCE4</span>Severity-aware alert to every affected patient.</div>
+      ${r.message ? html`<div>
+        <div class="sms"><span class="ic">\uD83D\uDCAC</span><div class="bubble-sms">${r.message}</div></div>
+        ${r.dispatch ? html`<div>
+          <div class="dispatch-stats">
+            <div><div class="v" style=${{color:"#16a34a"}}><${CountUp} value=${r.dispatch.count} /></div><div class="l">alerts sent</div></div>
+            <div><div class="v"><${CountUp} value=${r.dispatch.pharmacies} /></div><div class="l">pharmacies</div></div>
+            <div><div class="v">${r.dispatch.states}</div><div class="l">states</div></div>
           </div>
-        </div>` : html`<div class="stage-wait">Awaiting the recall text to classify\u2026</div>`}
-      </${StageCard}>
-    </div>
+          <div class="privacy"><span>\uD83D\uDD12</span><span>De-identified: patient names & numbers never leave the secure data layer.</span></div>
+        </div>` : html`<div class="stage-wait">Dispatching\u2026</div>`}
+      </div>` : html`<div class="stage-wait">Awaiting severity to draft the alert\u2026</div>`}
+    </${StageCard}>
+  </div>`;
+}
 
-    <div class="srow">
-      <${StageCard} n="3" color="#7c3aed" title="Who is affected?" sub="cohort match nationwide" status=${st("cohort",r.cohort)}>
-        <div class="explain"><span class="ei">\uD83C\uDFE5</span>Matched against 1,000,000 patient prescriptions.</div>
-        ${r.cohort ? html`<div>
-          <span class="bignum" style=${{color:sev}}><${CountUp} value=${r.cohort.customers} /></span>
-          <div class="kv">patients on this recalled medication</div>
-          <div class="statrow">
-            <div><div class="v"><${CountUp} value=${r.cohort.states} /></div><div class="l">states</div></div>
-            <div><div class="v"><${CountUp} value=${r.cohort.pharmacies} /></div><div class="l">pharmacies</div></div>
-          </div></div>` : html`<div class="stage-wait">Awaiting cohort match\u2026</div>`}
-      </${StageCard}>
-
-      <${StageCard} n="4" color="#16a34a" title="Alert the patients" sub="severity-aware dispatch" status=${st("outreach",r.dispatch)}>
-        <div class="explain"><span class="ei">\uD83D\uDCE4</span>Severity-aware alert to every affected patient.</div>
-        ${r.message ? html`<div>
-          <div class="sms"><span class="ic">\uD83D\uDCAC</span><div class="bubble-sms">${r.message}</div></div>
-          ${r.dispatch ? html`<div>
-            <div class="dispatch-stats">
-              <div><div class="v" style=${{color:"#16a34a"}}><${CountUp} value=${r.dispatch.count} /></div><div class="l">alerts sent</div></div>
-              <div><div class="v"><${CountUp} value=${r.dispatch.pharmacies} /></div><div class="l">pharmacies</div></div>
-              <div><div class="v">${r.dispatch.states}</div><div class="l">states</div></div>
-            </div>
-            <div class="privacy"><span>\uD83D\uDD12</span><span>De-identified: patient names & numbers never leave the secure data layer.</span></div>
-          </div>` : html`<div class="stage-wait">Dispatching\u2026</div>`}
-        </div>` : html`<div class="stage-wait">Awaiting severity to draft the alert\u2026</div>`}
-      </${StageCard}>
-    </div>
-
-    <${StageCard} n="5" color="#2563eb" title="The alert patients see" sub=${"OpenUI \u00b7 generated live by "+(r.cardBy||"\u2026")} status=${st("alert",r.cardHtml)} tall=${true}>
+function AlertStage({ rec, activeCard }) {
+  const r = rec || {};
+  const status = activeCard==="alert" ? "active" : (rec && r.cardHtml) ? "done" : "waiting";
+  return html`<div class="alert-col">
+    <${StageCard} n="5" color="#2563eb" title="The alert each patient receives"
+        sub=${"patient-facing notification \u00b7 generated live by "+(r.cardBy||"OpenUI")} status=${status} tall=${true}>
       ${r.cardHtml ? html`<div dangerouslySetInnerHTML=${{__html:r.cardHtml}}></div>`
-                   : html`<div class="stage-wait">The card appears here once the recall is processed\u2026</div>`}
+                   : html`<div class="stage-wait">The notification a patient receives appears here once the recall is processed\u2026</div>`}
     </${StageCard}>
   </div>`;
 }
@@ -461,6 +467,7 @@ function App() {
       </div>
 
       <${StageGrid} rec=${rec} activeCard=${activeCard} />
+      <${AlertStage} rec=${rec} activeCard=${activeCard} />
     </main>
   </div>`;
 }
