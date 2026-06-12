@@ -1,0 +1,123 @@
+# Airbyte declarative (low-code CDK) source for the openFDA drug enforcement
+# (recall) endpoint. Runs via PyAirbyte locally and can be pasted into the
+# Airbyte Cloud Connector Builder for the cloud-migration track.
+version: "6.0.0"
+type: DeclarativeSource
+
+check:
+  type: CheckStream
+  stream_names:
+    - drug_enforcement
+
+definitions:
+  # ----- requester: GET https://api.fda.gov/drug/enforcement.json -----
+  requester:
+    type: HttpRequester
+    url_base: "https://api.fda.gov"
+    path: "/drug/enforcement.json"
+    http_method: GET
+    request_parameters:
+      sort: "report_date:asc"
+      # Date-range filter driven by the incremental cursor's current slice, so
+      # re-runs resume from saved state (true incremental sync).
+      search: "report_date:[{{ stream_interval.start_time }} TO {{ stream_interval.end_time }}]"
+    error_handler:
+      type: DefaultErrorHandler
+      response_filters:
+        # openFDA returns 404 when a window has zero matching recalls -> treat
+        # as "no records", not an error.
+        - http_codes: [404]
+          action: IGNORE
+
+  # ----- pull records out of the "results" array -----
+  record_selector:
+    type: RecordSelector
+    extractor:
+      type: DpathExtractor
+      field_path: ["results"]
+
+  # ----- skip/limit offset pagination (limit<=1000, skip<=25000) -----
+  paginator:
+    type: DefaultPaginator
+    page_size_option:
+      type: RequestOption
+      inject_into: request_parameter
+      field_name: limit
+    page_token_option:
+      type: RequestOption
+      inject_into: request_parameter
+      field_name: skip
+    pagination_strategy:
+      type: OffsetIncrement
+      page_size: 1000
+
+  retriever:
+    type: SimpleRetriever
+    requester:
+      $ref: "#/definitions/requester"
+    record_selector:
+      $ref: "#/definitions/record_selector"
+    paginator:
+      $ref: "#/definitions/paginator"
+
+  # ----- incremental sync on report_date (state persisted by PyAirbyte) -----
+  incremental_cursor:
+    type: DatetimeBasedCursor
+    cursor_field: "report_date"
+    datetime_format: "%Y%m%d"
+    start_datetime:
+      type: MinMaxDatetime
+      datetime: "{{ config['start_date'] }}"
+      datetime_format: "%Y%m%d"
+    end_datetime:
+      type: MinMaxDatetime
+      datetime: "{{ config['end_date'] }}"
+      datetime_format: "%Y%m%d"
+    step: "P1M"
+    cursor_granularity: "P1D"
+
+streams:
+  - type: DeclarativeStream
+    name: drug_enforcement
+    primary_key: ["recall_number"]
+    retriever:
+      $ref: "#/definitions/retriever"
+    incremental_sync:
+      $ref: "#/definitions/incremental_cursor"
+    schema_loader:
+      type: InlineSchemaLoader
+      schema:
+        type: object
+        additionalProperties: true
+        properties:
+          recall_number: {type: ["null", string]}
+          product_ndc: {type: ["null", string]}
+          reason_for_recall: {type: ["null", string]}
+          classification: {type: ["null", string]}
+          status: {type: ["null", string]}
+          recalling_firm: {type: ["null", string]}
+          distribution_pattern: {type: ["null", string]}
+          report_date: {type: ["null", string]}
+          openfda: {type: ["null", object], additionalProperties: true}
+
+spec:
+  type: Spec
+  connection_specification:
+    $schema: http://json-schema.org/draft-07/schema#
+    type: object
+    required: ["start_date", "end_date"]
+    properties:
+      start_date:
+        type: string
+        title: Start date
+        description: Earliest report_date (YYYYMMDD) to ingest.
+        pattern: "^[0-9]{8}$"
+      end_date:
+        type: string
+        title: End date
+        description: Latest report_date (YYYYMMDD) to ingest.
+        pattern: "^[0-9]{8}$"
+      api_key:
+        type: string
+        title: openFDA API key (optional)
+        airbyte_secret: true

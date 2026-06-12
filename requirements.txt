@@ -1,0 +1,35 @@
+# FDA SafetyNet - Python dependencies (Python 3.12)
+# Installed incrementally per phase to keep the build fast and debuggable.
+
+# --- Phase 1: synthetic data + openFDA seed fetch ---
+requests>=2.31
+Faker>=24.0
+numpy>=1.26
+pandas>=2.2
+python-dotenv>=1.0
+
+# --- Phase 2: ingestion (PyAirbyte) ---
+airbyte>=0.20
+clickhouse-connect>=0.7
+
+# --- Phase 3: ClickHouse client (shared with Phase 2) ---
+# clickhouse-connect (above)
+
+# --- Phase 4: ML severity classification ---
+scikit-learn>=1.4
+scipy>=1.12
+joblib>=1.3
+guildai>=0.9
+
+# --- Phase 5: orchestration + API ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+websockets>=12.0
+openai>=1.30
+
+# --- Phase 6 (optional): OpenAI Agents SDK ---
+# openai-agents>=0.0.1
+
+# --- Phase 7 (optional): sponsor integrations ---
+# composio>=0.5
+# composio_openai_agents

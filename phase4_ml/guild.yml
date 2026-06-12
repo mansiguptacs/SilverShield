@@ -1,0 +1,19 @@
+- model: severity
+  description: openFDA recall-severity classifier (TF-IDF -> SVD -> LogReg)
+  operations:
+    train:
+      description: Train + evaluate the severity classifier
+      main: train
+      flags-import:
+        - max_features
+        - ngram_max
+        - svd_components
+        - C
+        - test_size
+        - seed
+      output-scalars:
+        accuracy: 'accuracy: (\value)'
+        f1_macro: 'f1_macro: (\value)'
+        pre_svd_corr: 'pre_svd_corr: (\value)'
+        post_svd_corr: 'post_svd_corr: (\value)'
+        collinearity_reduction: 'collinearity_reduction: (\value)'

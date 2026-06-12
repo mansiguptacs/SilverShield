@@ -1,0 +1,124 @@
+"""Phase 6: shared tools exposed to the OpenAI Agents SDK.
+
+Each tool wraps the SAME underlying Phase 5 tool and emits the SAME pipeline
+event, so the live UI is identical whether the deterministic orchestrator or the
+agent layer is driving. Tools read recall data from the shared run context (not
+from LLM-provided args) for reliability + confidentiality.
+"""
+from __future__ import annotations
+
+import asyncio
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from agents import RunContextWrapper, function_tool
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT))
+
+from phase4_ml.predict import classify  # noqa: E402
+from phase5_orchestration.events import Event, bus  # noqa: E402
+from phase5_orchestration.tools import clickhouse_tools, sms_stub  # noqa: E402
+from phase5_orchestration.tools.cite import cite  # noqa: E402
+from phase5_orchestration.tools.openui_client import render_alert_card  # noqa: E402
+
+STEP_DELAY = 0.4
+
+
+@dataclass
+class RecallContext:
+    """Per-recall state shared across the worker agents."""
+    recall: dict
+    severity: str | None = None
+    confidence: float | None = None
+    cohort: dict | None = None
+    dispatch: dict | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
+
+
+async def _emit(stage: str, recall_number: str, payload: dict, actor: str):
+    await bus.publish(Event(stage=stage, recall_number=recall_number, payload=payload, actor=actor))
+    await asyncio.sleep(STEP_DELAY)
+
+
+@function_tool
+async def classify_severity(ctx: RunContextWrapper[RecallContext]) -> str:
+    """Classify the recall's severity (Lethal/Moderate/Minor) from its reason text."""
+    rc = ctx.context
+    pred = classify(rc.recall["reason_for_recall"], rc.recall.get("severity"))
+    rc.severity, rc.confidence = pred["severity"], pred["confidence"]
+    await _emit("severity_classified", rc.recall["recall_number"],
+                {"severity": pred["severity"], "confidence": pred["confidence"], "model": pred["source"]},
+                actor="triage_agent")
+    return f"severity={pred['severity']} confidence={pred['confidence']} model={pred['source']}"
+
+
+@function_tool
+async def identify_cohort(ctx: RunContextWrapper[RecallContext]) -> str:
+    """Find every affected customer nationwide (de-identified per-state rollup)."""
+    rc = ctx.context
+    cohort = clickhouse_tools.cohort_summary(rc.recall["recall_number"])
+    points = clickhouse_tools.affected_pharmacy_points(rc.recall["recall_number"])
+    rc.cohort = cohort
+    await _emit("cohort_identified", rc.recall["recall_number"], {
+        "severity": rc.severity,
+        "total_customers": cohort["total_customers"],
+        "total_pharmacies": cohort["total_pharmacies"],
+        "total_states": cohort["total_states"],
+        "by_state": cohort["by_state"],
+        "pharmacy_points": points,
+    }, actor="triage_agent")
+    return (f"{cohort['total_customers']} customers across {cohort['total_states']} states, "
+            f"{cohort['total_pharmacies']} pharmacies")
+
+
+@function_tool
+async def draft_and_dispatch(ctx: RunContextWrapper[RecallContext]) -> str:
+    """Draft a severity-aware message and dispatch it to the full affected cohort."""
+    rc = ctx.context
+    r = rc.recall
+    severity = rc.severity or r.get("severity", "Minor")
+    message = sms_stub.build_message(severity, r["recalling_firm"], r["product_ndc"])
+    await _emit("message_drafted", r["recall_number"],
+                {"severity": severity, "message": message}, actor="outreach_agent")
+    result = sms_stub.dispatch_to_cohort(r["recall_number"], severity, r["recalling_firm"], r["product_ndc"])
+    rc.dispatch = result
+    await _emit("dispatched", r["recall_number"], {
+        "channel": result["channel"], "dispatched": result["dispatched"],
+        "pharmacies_notified": result["pharmacies_notified"], "states": result["states"],
+        "sample_recipients": result["sample_recipients"],
+    }, actor="outreach_agent")
+    return f"dispatched to {result['dispatched']} customers via {result['channel']}"
+
+
+@function_tool
+async def render_card(ctx: RunContextWrapper[RecallContext]) -> str:
+    """Generate the runtime OpenUI alert card for the recall."""
+    rc = ctx.context
+    r = rc.recall
+    cohort = rc.cohort or clickhouse_tools.cohort_summary(r["recall_number"])
+    card = render_alert_card({
+        "recall_number": r["recall_number"], "severity": rc.severity or "Minor",
+        "product_ndc": r["product_ndc"], "recalling_firm": r["recalling_firm"],
+        "reason_for_recall": r["reason_for_recall"], "customers": cohort["total_customers"],
+        "pharmacies": cohort["total_pharmacies"], "states": cohort["total_states"],
+    })
+    await _emit("card_rendered", r["recall_number"],
+                {"html": card["html"], "generated_by": card["generated_by"]}, actor="presenter_agent")
+    return f"card generated by {card['generated_by']}"
+
+
+@function_tool
+async def cite_action(ctx: RunContextWrapper[RecallContext]) -> str:
+    """Append a grounded citation to the audit trail (cited.md)."""
+    rc = ctx.context
+    r = rc.recall
+    cohort = rc.cohort or {}
+    cite(r["recall_number"], rc.severity or "Minor", r["source_url"],
+         f"Alerted {cohort.get('total_customers', 0):,} customers across "
+         f"{cohort.get('total_states', 0)} states ({r['recalling_firm']}).")
+    await _emit("cited", r["recall_number"], {"file": "cited.md", "severity": rc.severity},
+                actor="presenter_agent")
+    return "cited in cited.md"

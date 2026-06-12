@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FDA SafetyNet — Hackathon Pitch</title>
+<style>
+  :root {
+    --bg: #060912;
+    --bg-2: #0b1020;
+    --ink: #eaf0ff;
+    --muted: #9fb0d0;
+    --accent: #4f8cff;
+    --accent-2: #21d4a8;
+    --danger: #ff5d6c;
+    --warn: #ffb84d;
+    --line: rgba(255, 255, 255, 0.09);
+    --card: rgba(255, 255, 255, 0.04);
+    --glow: 0 0 60px rgba(79, 140, 255, 0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* animated background */
+  .bg-orbs { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; animation: float 18s ease-in-out infinite; }
+  .orb.a { width: 540px; height: 540px; background: #1d4ed8; top: -160px; left: -120px; }
+  .orb.b { width: 460px; height: 460px; background: #0f766e; bottom: -180px; right: -120px; animation-delay: -6s; }
+  .orb.c { width: 360px; height: 360px; background: #7c3aed; top: 40%; left: 55%; animation-delay: -11s; opacity: 0.35; }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, -30px) scale(1.1); }
+  }
+  .grid-overlay {
+    position: fixed; inset: 0; z-index: 0; opacity: 0.35;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
+  }
+
+  /* deck */
+  .deck { position: relative; z-index: 2; height: 100%; width: 100%; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 64px clamp(40px, 8vw, 160px);
+    opacity: 0;
+    transform: translateY(24px) scale(0.99);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+  .slide.active { display: flex; opacity: 1; transform: translateY(0) scale(1); }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent-2); font-weight: 700; margin-bottom: 22px;
+  }
+  .kicker::before { content: ""; width: 26px; height: 2px; background: var(--accent-2); display: inline-block; }
+
+  h1 { font-size: clamp(40px, 7vw, 92px); line-height: 1.02; font-weight: 800; letter-spacing: -0.03em; }
+  h2 { font-size: clamp(30px, 4.4vw, 56px); line-height: 1.07; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .lede { font-size: clamp(17px, 2vw, 23px); color: var(--muted); max-width: 940px; line-height: 1.5; margin-top: 10px; }
+  .gradient { background: linear-gradient(110deg, #6aa6ff 0%, #21d4a8 55%, #b07bff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .reveal > * { opacity: 0; transform: translateY(16px); animation: rise 0.6s forwards; }
+  .slide.active .reveal > * { animation-play-state: running; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+  .reveal > *:nth-child(1) { animation-delay: 0.10s; }
+  .reveal > *:nth-child(2) { animation-delay: 0.20s; }
+  .reveal > *:nth-child(3) { animation-delay: 0.30s; }
+  .reveal > *:nth-child(4) { animation-delay: 0.40s; }
+  .reveal > *:nth-child(5) { animation-delay: 0.50s; }
+  .reveal > *:nth-child(6) { animation-delay: 0.60s; }
+
+  /* cards / grids */
+  .cards { display: grid; gap: 18px; margin-top: 34px; }
+  .cards.c2 { grid-template-columns: repeat(2, 1fr); }
+  .cards.c3 { grid-template-columns: repeat(3, 1fr); }
+  .cards.c4 { grid-template-columns: repeat(4, 1fr); }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 24px; backdrop-filter: blur(8px); transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+  .card:hover { transform: translateY(-5px); border-color: rgba(79,140,255,0.5); }
+  .card .ico { font-size: 26px; margin-bottom: 12px; }
+  .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 14.5px; color: var(--muted); line-height: 1.5; }
+  .card .tag { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+
+  /* stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 40px; }
+  .stat { text-align: left; border-left: 2px solid var(--accent); padding-left: 18px; }
+  .stat .num { font-size: clamp(34px, 4.6vw, 60px); font-weight: 800; letter-spacing: -0.02em;
+    background: linear-gradient(110deg, #7fb0ff, #21d4a8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat .lbl { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* pipeline */
+  .pipe { display: flex; align-items: stretch; gap: 0; margin-top: 44px; flex-wrap: wrap; }
+  .step {
+    flex: 1; min-width: 130px; position: relative; padding: 20px 16px; text-align: center;
+    background: var(--card); border: 1px solid var(--line);
+  }
+  .step:first-child { border-radius: 16px 0 0 16px; }
+  .step:last-child { border-radius: 0 16px 16px 0; }
+  .step .n { width: 34px; height: 34px; border-radius: 50%; margin: 0 auto 10px;
+    display: grid; place-items: center; font-weight: 800; font-size: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #04121a; }
+  .step h4 { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+  .step p { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  .step .arrow { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); z-index: 3; color: var(--accent); font-size: 18px; }
+  .step:last-child .arrow { display: none; }
+
+  /* tech chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .chip { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line); font-size: 15px; font-weight: 600; }
+  .chip b { color: var(--accent-2); }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+
+  /* US map slide */
+  .map-wrap { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; margin-top: 24px; }
+  .map-stage { position: relative; aspect-ratio: 16/10; background: radial-gradient(ellipse at 50% 40%, rgba(79,140,255,0.10), transparent 70%);
+    border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .node { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2);
+    transform: translate(-50%, -50%); }
+  .node::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 1px solid var(--accent-2);
+    animation: ping 2.2s ease-out infinite; }
+  .node.hot { background: var(--danger); }
+  .node.hot::after { border-color: var(--danger); }
+  @keyframes ping { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(3.6); opacity: 0; } }
+  .map-label { position: absolute; bottom: 14px; left: 16px; font-size: 12px; color: var(--muted); letter-spacing: 0.06em; }
+
+  ul.clean { list-style: none; margin-top: 20px; display: grid; gap: 14px; }
+  ul.clean li { display: flex; gap: 14px; align-items: flex-start; font-size: 17px; color: #d4ddf2; line-height: 1.45; }
+  ul.clean li .b { color: var(--accent-2); font-weight: 800; margin-top: 1px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 26px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px; }
+  .panel h3 { font-size: 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    border: 1px solid var(--line); color: var(--muted); }
+  .badge.win { color: var(--accent-2); border-color: rgba(33,212,168,0.4); background: rgba(33,212,168,0.08); }
+
+  /* HUD */
+  .hud { position: fixed; z-index: 10; bottom: 22px; left: 0; right: 0; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 32px; pointer-events: none; }
+  .dots { display: flex; gap: 9px; pointer-events: auto; }
+  .dots button { width: 9px; height: 9px; border-radius: 50%; border: 0; background: rgba(255,255,255,0.22);
+    cursor: pointer; padding: 0; transition: all 0.25s ease; }
+  .dots button.on { background: var(--accent-2); width: 26px; border-radius: 999px; }
+  .nav { display: flex; gap: 10px; pointer-events: auto; }
+  .nav button { background: var(--card); border: 1px solid var(--line); color: var(--ink); width: 42px; height: 42px;
+    border-radius: 12px; font-size: 18px; cursor: pointer; transition: all 0.2s ease; }
+  .nav button:hover { border-color: var(--accent); background: rgba(79,140,255,0.12); }
+  .counter { position: fixed; top: 26px; right: 32px; z-index: 10; font-size: 13px; color: var(--muted);
+    letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+  .brand { position: fixed; top: 24px; left: 32px; z-index: 10; display: flex; align-items: center; gap: 10px;
+    font-weight: 800; letter-spacing: -0.01em; }
+  .brand .shield { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #04121a; font-size: 15px; }
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index: 11; transition: width 0.45s ease; box-shadow: var(--glow); }
+
+  .hint { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9; font-size: 12px;
+    color: var(--muted); opacity: 0.7; }
+  kbd { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; font-size: 11px; }
+
+  @media (max-width: 880px) {
+    .cards.c3, .cards.c4 { grid-template-columns: 1fr 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .map-wrap, .two-col { grid-template-columns: 1fr; }
+    .slide { padding: 80px 28px; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+  <div class="grid-overlay"></div>
+  <div class="progress" id="progress"></div>
+
+  <div class="brand"><span class="shield">&#128737;</span> FDA SafetyNet</div>
+  <div class="counter"><span id="cur">01</span> / <span id="tot">12</span></div>
+
+  <div class="deck" id="deck">
+
+    <!-- 1 TITLE + HOOK (~25s) -->
+    <section class="slide active">
+      <div class="reveal">
+        <span class="kicker">Autonomous Consumer Defense &middot; Hackathon 2026</span>
+        <h1>FDA <span class="gradient">SafetyNet</span></h1>
+        <p class="lede">The FDA recalls dangerous drugs every day &mdash; but the warning almost never reaches the person holding the bottle. <b>SafetyNet</b> catches every recall the instant it&rsquo;s published and alerts the exact people who bought it, nationwide, in seconds.</p>
+        <div class="chips">
+          <span class="chip"><span class="dot"></span> Airbyte</span>
+          <span class="chip"><span class="dot"></span> ClickHouse</span>
+          <span class="chip"><span class="dot"></span> Guild.ai</span>
+          <span class="chip"><span class="dot"></span> OpenUI</span>
+          <span class="chip"><span class="dot"></span> OpenAI Agents SDK</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 PROBLEM -> SOLUTION (~40s) -->
+    <section class="slide">
+      <div class="reveal">
+        <span class="kicker">Problem &rarr; Solution</span>
+        <h2>Today recalls reach people by luck. We make it instant.</h2>
+        <p class="lede">Recall notices crawl through press releases and store signage &mdash; days late, with no link to who actually bought the drug. SafetyNet is the always-on shield between the recall and the customer.</p>
+        <div class="cards c3">
+          <div class="card"><div class="ico">&#128268;</div><h3>Ingest live</h3><p>openFDA recalls pulled the moment they publish, with true incremental sync.</p></div>
+          <div class="card"><div class="ico">&#9889;</div><h3>Match instantly</h3><p>A ClickHouse materialized view joins recall &rarr; affected customers on insert.</p></div>
+          <div class="card"><div class="ico">&#128226;</div><h3>Alert the cohort</h3><p>AI triages severity, drafts a personalized, cited alert, and dispatches it.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 HOW IT WORKS (~45s) -->
+    <section class="slide">
+      <div class="reveal">
+        <span class="kicker">How It Works</span>
+        <h2>One recall &rarr; nationwide alerts, in one continuous flow.</h2>
+        <div class="pipe">
+          <div class="step"><div class="n">1</div><h4>Ingest</h4><p>PyAirbyte pulls live openFDA recalls.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">2</div><h4>Match</h4><p>ClickHouse MV joins NDC &rarr; customers.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">3</div><h4>Classify</h4><p>ML scores severity from reason text.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">4</div><h4>Decide</h4><p>Agents triage & draft outreach.</p><span class="arrow">&#10140;</span></div>
+          <div class="step"><div class="n">5</div><h4>Dispatch</h4><p>Cohort alerted; OpenUI card rendered.</p></div>
+        </div>
+        <div class="two-col" style="margin-top:30px;">
+          <div class="panel">
+            <h3>&#9881;&#65039; Deterministic backbone</h3>
+            <p style="color:var(--muted);font-size:15px;line-height:1.5;">PyAirbyte &rarr; ClickHouse, with the materialized view as an instant match trigger. Fast, reliable, no LLM in the hot path.</p>
+          </div>
+          <div class="panel">
+            <h3>&#129302; Reasoning agents</h3>
+            <p style="color:var(--muted);font-size:15px;line-height:1.5;">OpenAI Agents SDK: a Supervisor hands off to Triage, Outreach & Presenter &mdash; reasoning only over de-identified cohort data, never PII.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 SCALE + LIVE MAP (~45s, the wow) -->
+    <section class="slide">
+      <div class="reveal">
+        <span class="kicker">National Scale &middot; Live Demo</span>
+        <h2>Built to defend a country, not a demo.</h2>
+        <div class="map-wrap">
+          <div class="map-stage" id="mapStage">
+            <span class="map-label">Live fan-out &mdash; pharmacies lighting up as a recall propagates</span>
+          </div>
+          <div>
+            <ul class="clean">
+              <li><span class="b">&#9679;</span><span>One recall fans out to every affected location <b>in seconds</b>.</span></li>
+              <li><span class="b">&#9679;</span><span>ClickHouse does the join + geo rollup <b>sub-second</b> at 1M+ rows.</span></li>
+              <li><span class="b">&#9679;</span><span>Watch it live: the trace lights up stage by stage and the map lights up by state.</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="num">5,000</div><div class="lbl">Pharmacies</div></div>
+          <div class="stat"><div class="num">1M+</div><div class="lbl">Customer records</div></div>
+          <div class="stat"><div class="num">50</div><div class="lbl">States covered</div></div>
+          <div class="stat"><div class="num">&lt;1s</div><div class="lbl">Match latency</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 WHY WE WIN + CLOSE (~35s) -->
+    <section class="slide">
+      <div class="reveal">
+        <span class="kicker">Why We Win</span>
+        <h1 style="font-size:clamp(34px,5.5vw,68px);">When a recall drops,<br><span class="gradient">no one is left in the dark.</span></h1>
+        <div class="cards c4" style="margin-top:26px;">
+          <div class="card"><span class="badge win">ClickHouse</span><p style="margin-top:10px;">National match engine via materialized views at 1M+ scale.</p></div>
+          <div class="card"><span class="badge win">Airbyte</span><p style="margin-top:10px;">Declarative incremental ingestion &mdash; not a request loop.</p></div>
+          <div class="card"><span class="badge win">Guild.ai</span><p style="margin-top:10px;">Tracked severity-model sweeps + agentic MLOps.</p></div>
+          <div class="card"><span class="badge win">OpenUI</span><p style="margin-top:10px;">Severity-aware alert cards generated at runtime.</p></div>
+        </div>
+        <p class="lede" style="margin-top:24px;">Privacy-by-design, cloud-portable, and demoable today. <b>Thank you &mdash; let&rsquo;s run it live.</b></p>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="counter" style="display:none"></div>
+
+  <nav class="hud">
+    <div class="dots" id="dots"></div>
+    <div class="nav">
+      <button id="prev" aria-label="Previous">&#8592;</button>
+      <button id="next" aria-label="Next">&#8594;</button>
+    </div>
+  </nav>
+
+  <div class="hint">Navigate with <kbd>&larr;</kbd> <kbd>&rarr;</kbd> &middot; <kbd>Space</kbd> &middot; <kbd>F</kbd> fullscreen</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let idx = 0;
+
+  const dotsWrap = document.getElementById('dots');
+  slides.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.addEventListener('click', () => go(i));
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+  document.getElementById('tot').textContent = String(total).padStart(2, '0');
+
+  function go(n) {
+    idx = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+    document.getElementById('cur').textContent = String(idx + 1).padStart(2, '0');
+    document.getElementById('progress').style.width = ((idx + 1) / total * 100) + '%';
+    if (slides[idx].querySelector('#mapStage')) seedMap();
+  }
+  const next = () => go(idx + 1);
+  const prev = () => go(idx - 1);
+
+  document.getElementById('next').addEventListener('click', next);
+  document.getElementById('prev').addEventListener('click', prev);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  // swipe support
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) (dx < 0 ? next : prev)();
+  }, { passive: true });
+
+  // US map dot field (stylized point cloud roughly shaped like the continental US)
+  let mapSeeded = false;
+  function seedMap() {
+    if (mapSeeded) return;
+    mapSeeded = true;
+    const stage = document.getElementById('mapStage');
+    // rough normalized cluster points across a US-like footprint
+    const pts = [
+      [12,42],[16,30],[20,55],[24,38],[28,62],[30,28],[34,48],[38,68],[40,35],
+      [44,54],[48,30],[50,46],[54,64],[58,38],[60,52],[64,28],[68,58],[70,44],
+      [74,34],[76,60],[80,48],[82,30],[86,54],[88,40],[33,75],[55,76],[70,72],
+      [22,20],[46,22],[66,20],[18,68],[42,60],[78,68]
+    ];
+    pts.forEach((p, i) => {
+      const n = document.createElement('div');
+      n.className = 'node' + (i % 5 === 0 ? ' hot' : '');
+      n.style.left = p[0] + '%';
+      n.style.top = p[1] + '%';
+      n.style.animationDelay = (i * 0.12) + 's';
+      n.querySelector ? null : null;
+      const ring = n; // ::after handles ping
+      ring.style.setProperty('--d', (i * 0.12) + 's');
+      n.style.opacity = '0';
+      stage.appendChild(n);
+      setTimeout(() => { n.style.transition = 'opacity .4s ease'; n.style.opacity = '1'; }, i * 70);
+    });
+  }
+
+  go(0);
+</script>
+</body>
+</html>
