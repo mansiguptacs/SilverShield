@@ -107,8 +107,21 @@ async def process_recall(recall: dict) -> None:
     await _emit("cited", rn, {"file": "cited.md", "severity": severity})
 
 
+_ML_RANK = {"Lethal": 3, "Moderate": 2, "Minor": 1}
+
+
+def select_recalls(limit: int) -> list[dict]:
+    """Pick recalls ranked by the ML severity the UI actually shows (then reach),
+    so the headline recall is a genuine Lethal/Class I case with the widest spread."""
+    pool = clickhouse_tools.list_match_recalls(limit=max(limit, 40))
+    for r in pool:
+        r["severity"] = classify(r["reason_for_recall"], r.get("severity"))["severity"]
+    pool.sort(key=lambda r: (_ML_RANK.get(r["severity"], 0), r["customers"]), reverse=True)
+    return pool[:limit]
+
+
 async def run(limit: int = 8) -> None:
-    recalls = clickhouse_tools.list_match_recalls(limit=limit)
+    recalls = select_recalls(limit)
     await bus.publish(Event(stage="run_started", recall_number="-", payload={"recalls": len(recalls)}))
     for recall in recalls:
         await process_recall(recall)
