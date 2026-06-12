@@ -58,6 +58,7 @@ async def process_recall(recall: dict) -> None:
     severity = pred["severity"]
     await _emit("severity_classified", rn, {
         "severity": severity, "confidence": pred["confidence"], "model": pred["source"],
+        "proba": pred.get("proba", {}), "reason_for_recall": recall["reason_for_recall"],
     })
 
     # Nationwide cohort match (de-identified per-state rollup + pharmacy points).
@@ -76,14 +77,14 @@ async def process_recall(recall: dict) -> None:
     message = sms_stub.build_message(severity, recall["recalling_firm"], recall["product_ndc"])
     await _emit("message_drafted", rn, {"severity": severity, "message": message})
 
-    # Dispatch to the cohort (aggregates + masked samples only).
+    # Dispatch to the cohort. Only de-identified aggregates leave the data layer -
+    # patient names / phone numbers never reach the event bus or the UI.
     result = sms_stub.dispatch_to_cohort(rn, severity, recall["recalling_firm"], recall["product_ndc"])
     await _emit("dispatched", rn, {
         "channel": result["channel"],
         "dispatched": result["dispatched"],
         "pharmacies_notified": result["pharmacies_notified"],
         "states": result["states"],
-        "sample_recipients": result["sample_recipients"],
     })
 
     # Runtime OpenUI alert card.

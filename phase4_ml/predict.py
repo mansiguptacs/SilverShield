@@ -36,17 +36,19 @@ def classify(reason_text: str, fallback_classification: str | None = None) -> di
     pipeline, classes = _load_model()
     if pipeline is None:
         sev = CLASSIFICATION_TO_SEVERITY.get(fallback_classification or "", "Minor")
-        return {"severity": sev, "confidence": 0.5, "source": "classification_fallback"}
+        return {"severity": sev, "confidence": 0.5, "source": "classification_fallback", "proba": {sev: 1.0}}
 
     text = (reason_text or "").strip()
     if not text:
         sev = CLASSIFICATION_TO_SEVERITY.get(fallback_classification or "", "Minor")
-        return {"severity": sev, "confidence": 0.5, "source": "empty_text_fallback"}
+        return {"severity": sev, "confidence": 0.5, "source": "empty_text_fallback", "proba": {sev: 1.0}}
 
     proba = pipeline.predict_proba([text])[0]
     idx = int(proba.argmax())
     label = pipeline.classes_[idx]
-    return {"severity": str(label), "confidence": round(float(proba[idx]), 3), "source": "ml_model"}
+    dist = {str(c): round(float(p), 3) for c, p in zip(pipeline.classes_, proba)}
+    return {"severity": str(label), "confidence": round(float(proba[idx]), 3),
+            "source": "ml_model", "proba": dist}
 
 
 if __name__ == "__main__":

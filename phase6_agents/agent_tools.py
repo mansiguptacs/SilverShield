@@ -50,7 +50,8 @@ async def classify_severity(ctx: RunContextWrapper[RecallContext]) -> str:
     pred = classify(rc.recall["reason_for_recall"], rc.recall.get("severity"))
     rc.severity, rc.confidence = pred["severity"], pred["confidence"]
     await _emit("severity_classified", rc.recall["recall_number"],
-                {"severity": pred["severity"], "confidence": pred["confidence"], "model": pred["source"]},
+                {"severity": pred["severity"], "confidence": pred["confidence"], "model": pred["source"],
+                 "proba": pred.get("proba", {}), "reason_for_recall": rc.recall["reason_for_recall"]},
                 actor="triage_agent")
     return f"severity={pred['severity']} confidence={pred['confidence']} model={pred['source']}"
 
@@ -88,7 +89,6 @@ async def draft_and_dispatch(ctx: RunContextWrapper[RecallContext]) -> str:
     await _emit("dispatched", r["recall_number"], {
         "channel": result["channel"], "dispatched": result["dispatched"],
         "pharmacies_notified": result["pharmacies_notified"], "states": result["states"],
-        "sample_recipients": result["sample_recipients"],
     }, actor="outreach_agent")
     return f"dispatched to {result['dispatched']} customers via {result['channel']}"
 

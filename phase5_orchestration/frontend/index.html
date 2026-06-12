@@ -14,7 +14,7 @@
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--txt); overflow:hidden;
          font-family:Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif; }
-  .app { display:grid; grid-template-rows:auto auto 1fr auto; height:100vh; }
+  .app { display:grid; grid-template-rows:auto auto 1fr; height:100vh; }
 
   header { display:flex; align-items:center; gap:22px; padding:13px 24px;
            background:var(--panel); border-bottom:1px solid var(--line); }
@@ -43,7 +43,7 @@
   .step.active .lbl, .step.done .lbl { color:var(--txt); }
   .step .val { font-size:10.5px; color:var(--accent); font-weight:700; margin-top:2px; height:13px; }
 
-  main { display:grid; grid-template-columns:1.45fr 1fr; gap:16px; padding:14px 24px; min-height:0; }
+  main { display:grid; grid-template-columns:0.92fr 1.08fr; gap:16px; padding:14px 24px; min-height:0; }
   .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
           display:flex; flex-direction:column; min-height:0; overflow:hidden; }
   .card > h3 { margin:0; padding:13px 18px; font-size:12px; text-transform:uppercase; letter-spacing:.07em;
@@ -86,6 +86,33 @@
   .rchip { font-size:10.5px; color:var(--accent); font-weight:700; background:rgba(37,99,235,.1); padding:3px 9px; border-radius:6px; }
   .rcaret { font-size:16px; color:var(--soft); width:14px; text-align:center; }
   .rbody { padding:0 12px 12px; display:flex; flex-direction:column; gap:10px; }
+  .panel { scroll-margin:14px; }
+
+  /* fixed single-recall stage grid */
+  .stages { display:flex; flex-direction:column; gap:13px; min-height:0; overflow-y:auto; }
+  .srow { display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:0 0 auto; }
+  .stage { background:var(--panel); border:1.5px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
+           display:flex; flex-direction:column; min-height:0; overflow:hidden; transition:border-color .3s, box-shadow .3s; }
+  .stage.active { border-color:var(--accent); box-shadow:0 0 0 4px rgba(37,99,235,.1); }
+  .stage.done { border-color:#bbf7d0; }
+  .stage-head { display:flex; align-items:center; gap:10px; padding:10px 13px; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .stage-num { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+               font-size:13px; font-weight:800; flex-shrink:0; transition:background .3s; }
+  .stage-title { font-size:13px; font-weight:800; line-height:1.15; }
+  .stage-sub { font-size:10px; color:var(--muted); }
+  .stage-live { margin-left:auto; font-size:9.5px; font-weight:800; color:var(--accent); letter-spacing:.05em;
+                background:rgba(37,99,235,.1); padding:3px 8px; border-radius:20px; animation:blink 1.1s infinite; }
+  .stage-done-tag { margin-left:auto; font-size:9.5px; font-weight:800; color:#16a34a; letter-spacing:.04em; }
+  @keyframes blink { 50%{opacity:.4;} }
+  .stage-body { padding:11px 14px; overflow:hidden; flex:1; min-height:0; }
+  .stage.tall { flex:1 1 auto; min-height:200px; }
+  .stage.tall .stage-body { overflow-y:auto; }
+  .stage-wait { font-size:12px; color:var(--soft); font-style:italic; margin-top:2px; }
+  .src-link { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:600; color:var(--accent);
+              text-decoration:none; margin-top:9px; }
+  .src-link:hover { text-decoration:underline; }
+  .tagline a { color:var(--accent); text-decoration:none; font-weight:600; }
+  .tagline a:hover { text-decoration:underline; }
   .panel { border:1.5px solid var(--line); border-radius:13px; padding:14px 16px; background:var(--panel2);
            transition:border-color .3s, box-shadow .3s, background .3s; }
   .panel.active { border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px rgba(37,99,235,.08); }
@@ -95,20 +122,46 @@
   .panel-t { font-size:14px; font-weight:800; }
   .panel-s { font-size:11px; color:var(--muted); }
   .waiting { font-size:12.5px; color:var(--soft); font-style:italic; }
+  .explain { font-size:11px; color:var(--muted); margin:0 0 9px; padding:0 0 8px; border-bottom:1px dashed var(--line);
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .explain .ei { margin-right:5px; }
+  .proba { margin-top:9px; display:flex; flex-direction:column; gap:6px; }
+  .proba-row { display:flex; align-items:center; gap:9px; font-size:12px; }
+  .proba-row .pl { width:62px; font-weight:800; }
+  .proba-row .pt { flex:1; height:11px; background:#eef2f7; border-radius:6px; overflow:hidden; display:block; }
+  .proba-row .pf { display:block; height:100%; min-width:3px; border-radius:6px; transition:width .8s ease; }
+  .proba-row .pv { width:42px; text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); font-weight:600; }
+  .input-quote { font-size:12px; color:#475569; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--soft);
+                 border-radius:0 8px 8px 0; padding:7px 10px; margin:0 0 4px; line-height:1.4;
+                 display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+  .dispatch-stats { display:flex; gap:22px; margin-top:10px; }
+  .dispatch-stats .v { font-size:20px; font-weight:800; }
+  .dispatch-stats .l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .privacy { display:flex; gap:7px; align-items:flex-start; background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d;
+             border-radius:9px; padding:8px 10px; font-size:11px; margin-top:10px; line-height:1.4; }
+  .howto-wrap { padding:26px 22px; }
+  .howto-title { font-size:14.5px; font-weight:800; margin-bottom:4px; }
+  .howto-sub { font-size:12px; color:var(--muted); margin-bottom:14px; }
+  ol.howto { margin:0; padding-left:20px; }
+  ol.howto li { font-size:12.5px; color:#475569; margin:8px 0; line-height:1.45; }
+  ol.howto li b { color:var(--txt); }
+  .howto-note { font-size:11.5px; color:var(--muted); margin-top:14px; padding-top:12px; border-top:1px solid var(--line); line-height:1.5; }
   .kv { font-size:13px; color:var(--muted); margin:3px 0; }
   .kv b { color:var(--txt); }
-  .reason-box { background:#fff; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:13px;
-                line-height:1.5; color:#334155; margin-top:8px; }
+  .reason-box { background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:12.5px;
+                line-height:1.4; color:#334155; margin-top:8px; }
   .sev-badge { display:inline-block; padding:5px 13px; border-radius:8px; color:#fff; font-weight:800; font-size:13px; letter-spacing:.04em; }
   .conf-track { height:9px; background:#eef2f7; border-radius:6px; margin-top:10px; overflow:hidden; }
   .conf-fill { height:100%; border-radius:6px; transition:width .7s ease; }
-  .bignum { font-size:46px; font-weight:800; line-height:1; }
-  .statrow { display:flex; gap:24px; margin-top:12px; }
-  .statrow .v { font-size:23px; font-weight:800; }
-  .statrow .l { font-size:11px; color:var(--muted); }
-  .phone { max-width:280px; background:#0f1a2e; border-radius:22px; padding:11px; margin:2px 0; }
-  .phone .screen { background:#0b1220; border-radius:14px; padding:12px 11px; }
-  .bubble-sms { background:#2563eb; color:#fff; padding:9px 12px; border-radius:14px 14px 14px 4px; font-size:12px; line-height:1.5; }
+  .bignum { font-size:38px; font-weight:800; line-height:1; }
+  .statrow { display:flex; gap:22px; margin-top:10px; }
+  .statrow .v { font-size:20px; font-weight:800; }
+  .statrow .l { font-size:10.5px; color:var(--muted); }
+  .sms { display:flex; gap:8px; align-items:flex-start; }
+  .sms .ic { width:26px; height:26px; border-radius:7px; background:#16a34a; color:#fff; flex-shrink:0;
+             display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .bubble-sms { background:#eef4ff; color:#1e293b; padding:8px 11px; border-radius:4px 12px 12px 12px; font-size:12px;
+                line-height:1.45; border:1px solid #dbe6fb; }
   .rcpt { display:flex; justify-content:space-between; padding:7px 11px; background:#fff; border:1px solid var(--line);
           border-radius:8px; margin-top:7px; font-size:12px; }
   .rcpt .ph2 { color:var(--muted); font-variant-numeric:tabular-nums; }
@@ -145,9 +198,10 @@ const STAGES = [
   ["card_rendered","Alert card","\uD83C\uDFA8"],["cited","Cited","\u2705"],
 ];
 const SEV = { Lethal:"#e5484d", Moderate:"#d97706", Minor:"#2563eb" };
-const CARD_OF = { fda_alert:"recall", ingested:"recall", severity_classified:"recall",
+const CARD_OF = { fda_alert:"recall", ingested:"recall", severity_classified:"severity",
   cohort_identified:"cohort", message_drafted:"outreach", dispatched:"outreach",
   card_rendered:"alert", cited:"alert" };
+const PROBA_ORDER = ["Lethal","Moderate","Minor"];
 
 const FIPS_ABBR = {"01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY"};
 const ABBR_NAME = {AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",DC:"District of Columbia",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming"};
@@ -219,93 +273,87 @@ function USMap({ stateCust, statePharm, network, affected }) {
       ${fmt(statePharm[a]||0)} pharmacies</div>`;
 }
 
-function Panel({ id, icon, color, title, sub, active, idle, children }) {
-  const ref=useRef(null);
-  useEffect(()=>{ if(active&&ref.current) ref.current.scrollIntoView({behavior:"smooth",block:"nearest"}); },[active]);
-  return html`<div ref=${ref} class="panel ${active?"active":""} ${idle?"idle":""}">
-    <div class="panel-head"><div class="panel-ic" style=${{background:(color)+"22",color}}>${icon}</div>
-      <div><div class="panel-t">${title}</div><div class="panel-s">${sub}</div></div></div>
-    ${children}</div>`;
-}
-
-const STATUS = { fda_alert:"Detected", ingested:"Ingested", severity_classified:"Classified",
-  cohort_identified:"Matching\u2026", message_drafted:"Drafting\u2026", dispatched:"Dispatched",
-  card_rendered:"Rendering\u2026", cited:"Complete" };
-
-function RecallBlock({ rec, isActive, activeCard }) {
-  const [open,setOpen]=useState(isActive);
-  const ref=useRef(null);
-  useEffect(()=>{ setOpen(isActive);
-    if(isActive&&ref.current) ref.current.scrollIntoView({behavior:"smooth",block:"start"}); },[isActive]);
-  const sev=SEV[rec.severity]||"#94a3b8";
-  const ac = c => isActive && activeCard===c;
-  return html`<div ref=${ref} class="rblock ${isActive?"active":""}">
-    <div class="rhead" onClick=${()=>setOpen(o=>!o)}>
-      <span class="rdot" style=${{background:sev}}></span>
-      <div class="rhead-main">
-        <div class="rfirm">${rec.firm||"Incoming recall\u2026"}</div>
-        <div class="rmeta">${rec.recall_number}${rec.ndc?" \u00b7 NDC "+rec.ndc:""}</div>
-      </div>
-      <div class="rhead-right">
-        ${rec.severity?html`<span class="rsev" style=${{background:sev}}>${rec.severity}</span>`:""}
-        ${rec.dispatch?html`<span class="rstat">${fmt(rec.dispatch.count)} alerts</span>`
-                      :html`<span class="rchip">${STATUS[rec.stage]||"\u2026"}</span>`}
-        <span class="rcaret">${open?"\u2212":"+"}</span>
-      </div>
+function StageCard({ n, color, title, sub, status, tall, children }) {
+  // status: "active" | "done" | "waiting"
+  const numBg = status==="waiting" ? "#eef2f7" : color;
+  const numFg = status==="waiting" ? "#94a3b8" : "#fff";
+  return html`<div class="stage ${status} ${tall?"tall":""}">
+    <div class="stage-head">
+      <span class="stage-num" style=${{background:numBg,color:numFg}}>${status==="done"?"\u2713":n}</span>
+      <div><div class="stage-title">${title}</div><div class="stage-sub">${sub}</div></div>
+      ${status==="active"?html`<span class="stage-live">\u25CF LIVE</span>`:
+        status==="done"?html`<span class="stage-done-tag">\u2713 DONE</span>`:""}
     </div>
-    ${open?html`<div class="rbody">
-      <${Panel} icon="\uD83D\uDCE1" color="#e5484d" title="Recall under review" sub="openFDA enforcement record"
-          active=${ac("recall")} idle=${!rec.firm}>
-        ${rec.firm ? html`<div>
-          <div class="kv">Firm: <b>${rec.firm}</b></div>
-          <div class="reason-box">${rec.reason}</div>
-          ${rec.severity ? html`<div style=${{marginTop:"12px"}}>
-            <span class="sev-badge" style=${{background:sev}}>${rec.severity}</span>
-            <div class="conf-track"><div class="conf-fill" style=${{width:Math.round((rec.confidence||0)*100)+"%",background:sev}}></div></div>
-            <div class="kv" style=${{marginTop:"5px"}}>ML confidence <b>${Math.round((rec.confidence||0)*100)}%</b> \u00b7 TF-IDF\u2192SVD\u2192LogReg</div>
-          </div>` : html`<div class="kv" style=${{marginTop:"8px"}}>Classifying severity\u2026</div>`}
-        </div>` : html`<div class="waiting">Waiting for recall details\u2026</div>`}
-      </${Panel}>
-
-      <${Panel} icon="\uD83C\uDFE5" color="#7c3aed" title="Patients matched nationwide" sub="join across 1,000,000 records"
-          active=${ac("cohort")} idle=${!rec.cohort}>
-        ${rec.cohort ? html`<div>
-          <span class="bignum" style=${{color:sev}}><${CountUp} value=${rec.cohort.customers} /></span>
-          <div class="kv">customers on this recalled medication</div>
-          <div class="statrow">
-            <div><div class="v"><${CountUp} value=${rec.cohort.states} /></div><div class="l">states</div></div>
-            <div><div class="v"><${CountUp} value=${rec.cohort.pharmacies} /></div><div class="l">pharmacies</div></div>
-          </div></div>` : html`<div class="waiting">Awaiting cohort match\u2026</div>`}
-      </${Panel}>
-
-      <${Panel} icon="\uD83D\uDCE4" color="#16a34a" title="Emergency outreach" sub="severity-aware dispatch"
-          active=${ac("outreach")} idle=${!rec.message}>
-        ${rec.message ? html`<div>
-          <div class="phone"><div class="screen"><div class="bubble-sms">${rec.message}</div></div></div>
-          ${rec.dispatch ? html`<div style=${{marginTop:"10px"}}>
-            <span class="bignum" style=${{fontSize:"34px",color:"#16a34a"}}><${CountUp} value=${rec.dispatch.count} /></span>
-            <span class="kv"> alerts sent via ${rec.dispatch.channel}</span>
-            ${(rec.dispatch.samples||[]).map((r,i)=>html`<div class="rcpt" key=${i}>
-              <span>${r.name} \u00b7 ${r.state}</span><span class="ph2">${r.phone}</span></div>`)}
-          </div>` : html`<div class="kv" style=${{marginTop:"8px"}}>Dispatching\u2026</div>`}
-        </div>` : html`<div class="waiting">Drafting outreach message\u2026</div>`}
-      </${Panel}>
-
-      <${Panel} icon="\uD83C\uDFA8" color="#2563eb" title="OpenUI alert card" sub=${"generated at runtime \u00b7 "+(rec.cardBy||"")}
-          active=${ac("alert")} idle=${!rec.cardHtml}>
-        ${rec.cardHtml ? html`<div dangerouslySetInnerHTML=${{__html:rec.cardHtml}}></div>`
-                       : html`<div class="waiting">Generating alert card\u2026</div>`}
-      </${Panel}>
-    </div>`:""}
+    <div class="stage-body">${children}</div>
   </div>`;
 }
 
-function RecallList({ recalls, activeRn, activeCard }) {
-  if (!recalls.length) return html`<div class="stack"><div class="waiting" style=${{padding:"40px 10px",textAlign:"center"}}>
-    Click <b>Launch live defense</b> to watch SafetyNet protect patients - one recall at a time.</div></div>`;
-  return html`<div class="stack">
-    ${recalls.map(r=>html`<${RecallBlock} key=${r.recall_number} rec=${r}
-        isActive=${r.recall_number===activeRn} activeCard=${activeCard} />`)}
+function StageGrid({ rec, activeCard }) {
+  const r = rec || {};
+  const sev = SEV[r.severity] || "#94a3b8";
+  // status of a stage: active (current), done (data present + not active), waiting (no data yet)
+  const st = (id, filled) => activeCard===id ? "active" : (rec && filled) ? "done" : "waiting";
+
+  return html`<div class="stages">
+    <div class="srow">
+      <${StageCard} n="1" color="#e5484d" title="The FDA recall" sub="raw record from openFDA" status=${st("recall",r.firm)}>
+        <div class="explain"><span class="ei">\uD83D\uDCE1</span>The recall as the FDA published it.</div>
+        ${r.firm ? html`<div>
+          <div class="kv">Firm: <b>${r.firm}</b> \u00b7 NDC <b>${r.ndc}</b></div>
+          <div class="reason-box">${r.reason}</div>
+          ${r.sourceUrl?html`<a class="src-link" href=${r.sourceUrl} target="_blank" rel="noopener">\u2197 View this recall on openFDA</a>`:""}
+        </div>` : html`<div class="stage-wait">Waiting to pull the recall\u2026</div>`}
+      </${StageCard}>
+
+      <${StageCard} n="2" color="#e5484d" title="How dangerous is it?" sub="ML severity classifier" status=${st("severity",r.severity)}>
+        <div class="explain"><span class="ei">\uD83E\uDDE0</span>ML model rates the danger from the reason text.</div>
+        ${r.severity ? html`<div>
+          ${r.proba ? html`<div class="proba">
+            ${PROBA_ORDER.map(k=>{const v=(r.proba[k]||0); return html`<div class="proba-row" key=${k}>
+              <span class="pl" style=${{color:SEV[k]}}>${k}</span>
+              <span class="pt"><span class="pf" style=${{width:Math.round(v*100)+"%",background:SEV[k]}}></span></span>
+              <span class="pv">${Math.round(v*100)}%</span></div>`;})}
+          </div>` : ""}
+          <div style=${{marginTop:"9px"}}>
+            <span class="sev-badge" style=${{background:sev}}>\u2192 ${r.severity}</span>
+            <span class="kv" style=${{marginLeft:"8px"}}>via TF-IDF\u2192SVD\u2192LogReg</span>
+          </div>
+        </div>` : html`<div class="stage-wait">Awaiting the recall text to classify\u2026</div>`}
+      </${StageCard}>
+    </div>
+
+    <div class="srow">
+      <${StageCard} n="3" color="#7c3aed" title="Who is affected?" sub="cohort match nationwide" status=${st("cohort",r.cohort)}>
+        <div class="explain"><span class="ei">\uD83C\uDFE5</span>Matched against 1,000,000 patient prescriptions.</div>
+        ${r.cohort ? html`<div>
+          <span class="bignum" style=${{color:sev}}><${CountUp} value=${r.cohort.customers} /></span>
+          <div class="kv">patients on this recalled medication</div>
+          <div class="statrow">
+            <div><div class="v"><${CountUp} value=${r.cohort.states} /></div><div class="l">states</div></div>
+            <div><div class="v"><${CountUp} value=${r.cohort.pharmacies} /></div><div class="l">pharmacies</div></div>
+          </div></div>` : html`<div class="stage-wait">Awaiting cohort match\u2026</div>`}
+      </${StageCard}>
+
+      <${StageCard} n="4" color="#16a34a" title="Alert the patients" sub="severity-aware dispatch" status=${st("outreach",r.dispatch)}>
+        <div class="explain"><span class="ei">\uD83D\uDCE4</span>Severity-aware alert to every affected patient.</div>
+        ${r.message ? html`<div>
+          <div class="sms"><span class="ic">\uD83D\uDCAC</span><div class="bubble-sms">${r.message}</div></div>
+          ${r.dispatch ? html`<div>
+            <div class="dispatch-stats">
+              <div><div class="v" style=${{color:"#16a34a"}}><${CountUp} value=${r.dispatch.count} /></div><div class="l">alerts sent</div></div>
+              <div><div class="v"><${CountUp} value=${r.dispatch.pharmacies} /></div><div class="l">pharmacies</div></div>
+              <div><div class="v">${r.dispatch.states}</div><div class="l">states</div></div>
+            </div>
+            <div class="privacy"><span>\uD83D\uDD12</span><span>De-identified: patient names & numbers never leave the secure data layer.</span></div>
+          </div>` : html`<div class="stage-wait">Dispatching\u2026</div>`}
+        </div>` : html`<div class="stage-wait">Awaiting severity to draft the alert\u2026</div>`}
+      </${StageCard}>
+    </div>
+
+    <${StageCard} n="5" color="#2563eb" title="The alert patients see" sub=${"OpenUI \u00b7 generated live by "+(r.cardBy||"\u2026")} status=${st("alert",r.cardHtml)} tall=${true}>
+      ${r.cardHtml ? html`<div dangerouslySetInnerHTML=${{__html:r.cardHtml}}></div>`
+                   : html`<div class="stage-wait">The card appears here once the recall is processed\u2026</div>`}
+    </${StageCard}>
   </div>`;
 }
 
@@ -314,16 +362,13 @@ function App() {
   const [running,setRunning]=useState(false);
   const [curStage,setCurStage]=useState(null);
   const [doneStages,setDoneStages]=useState({});
-  const [recalls,setRecalls]=useState([]);
-  const [activeRn,setActiveRn]=useState(null);
+  const [rec,setRec]=useState(null);
   const [stepVals,setStepVals]=useState({});
   const [stateCust,setStateCust]=useState({});
   const [statePharm,setStatePharm]=useState({});
   const [affected,setAffected]=useState([]);
   const [network,setNetwork]=useState([]);
   const [totals,setTotals]=useState({customers:0,pharmacies:0,states:new Set()});
-  const [feed,setFeed]=useState([]);
-  const [log,setLog]=useState([]);
 
   useEffect(()=>{
     fetch("/api/stats").then(r=>r.json()).then(setStats);
@@ -338,27 +383,23 @@ function App() {
     const {stage,recall_number,payload}=ev;
     if (stage==="run_started"){ setRunning(true); setStateCust({}); setStatePharm({}); setAffected([]);
       setDoneStages({}); setStepVals({}); setTotals({customers:0,pharmacies:0,states:new Set()});
-      setFeed([]); setRecalls([]); setActiveRn(null); setCurStage(null); return; }
+      setRec(null); setCurStage(null); return; }
     if (stage==="run_complete"){ setRunning(false); setCurStage(null); return; }
 
     setCurStage(stage);
-    setActiveRn(recall_number);
     const idx=STAGES.findIndex(s=>s[0]===stage);
     setDoneStages(prev=>{const n=stage==="fda_alert"?{}:{...prev};STAGES.forEach((s,i)=>{if(i<idx)n[s[0]]=true;});return n;});
 
-    setRecalls(prev=>{
-      const list=[...prev];
-      const i=list.findIndex(r=>r.recall_number===recall_number);
-      const r=i>=0?{...list[i]}:{recall_number};
+    setRec(prev=>{
+      const r = stage==="fda_alert" ? {recall_number} : {...(prev||{}), recall_number};
       r.stage=stage;
-      if(stage==="fda_alert"){r.firm=payload.recalling_firm;r.ndc=payload.product_ndc;r.reason=payload.reason_for_recall;}
-      if(stage==="severity_classified"){r.severity=payload.severity;r.confidence=payload.confidence;}
+      if(stage==="fda_alert"){r.firm=payload.recalling_firm;r.ndc=payload.product_ndc;r.reason=payload.reason_for_recall;r.sourceUrl=payload.source_url;}
+      if(stage==="severity_classified"){r.severity=payload.severity;r.confidence=payload.confidence;r.proba=payload.proba;}
       if(stage==="cohort_identified")r.cohort={customers:payload.total_customers,states:payload.total_states,pharmacies:payload.total_pharmacies};
       if(stage==="message_drafted")r.message=payload.message;
-      if(stage==="dispatched")r.dispatch={count:payload.dispatched,channel:payload.channel,samples:payload.sample_recipients};
+      if(stage==="dispatched")r.dispatch={count:payload.dispatched,channel:payload.channel,states:payload.states,pharmacies:payload.pharmacies_notified};
       if(stage==="card_rendered"){r.cardHtml=payload.html;r.cardBy=payload.generated_by;}
-      if(i>=0){list[i]=r;return list;}
-      return [r,...list];
+      return r;
     });
 
     setStepVals(prev=>{const v={...prev};
@@ -367,34 +408,30 @@ function App() {
       if(stage==="dispatched")v[stage]=fmt(payload.dispatched)+" sent";
       return v;});
 
-    if(stage==="fda_alert")
-      setFeed(prev=>[{rn:recall_number,firm:payload.recalling_firm,ndc:payload.product_ndc},...prev].slice(0,10));
     if(stage==="cohort_identified"){
-      setStateCust(prev=>{const n={...prev};(payload.by_state||[]).forEach(s=>{n[s.state]=(n[s.state]||0)+s.customers;});return n;});
-      setStatePharm(prev=>{const n={...prev};(payload.by_state||[]).forEach(s=>{n[s.state]=(n[s.state]||0)+s.pharmacies;});return n;});
-      setTotals(prev=>{const st=new Set(prev.states);(payload.by_state||[]).forEach(s=>st.add(s.state));return {...prev,states:st};});
+      setStateCust(()=>{const n={};(payload.by_state||[]).forEach(s=>{n[s.state]=s.customers;});return n;});
+      setStatePharm(()=>{const n={};(payload.by_state||[]).forEach(s=>{n[s.state]=s.pharmacies;});return n;});
+      setTotals(prev=>{const st=new Set();(payload.by_state||[]).forEach(s=>st.add(s.state));return {...prev,states:st};});
       const sev=payload.severity;
-      setAffected(prev=>[...prev,...(payload.pharmacy_points||[]).map(p=>[p[0],p[1],p[2],sev])].slice(-4000));
+      setAffected((payload.pharmacy_points||[]).map(p=>[p[0],p[1],p[2],sev]));
     }
     if(stage==="dispatched")
-      setTotals(prev=>({customers:prev.customers+payload.dispatched,pharmacies:prev.pharmacies+payload.pharmacies_notified,states:prev.states}));
-
-    setLog(prev=>[{stage,rn:recall_number,t:Date.now()},...prev].slice(0,60));
+      setTotals(prev=>({customers:payload.dispatched,pharmacies:payload.pharmacies_notified,states:prev.states}));
   }
 
-  async function launch(){ setRunning(true); await fetch("/api/run?limit=8",{method:"POST"}); }
+  async function launch(){ setRunning(true); await fetch("/api/run?limit=1",{method:"POST"}); }
   const activeCard=CARD_OF[curStage]||null;
 
   return html`
   <div class="app">
     <header>
       <div><div class="logo">FDA <span class="shield">SafetyNet</span></div>
-        <div class="tagline">Autonomous nationwide drug-recall defense</div></div>
+        <div class="tagline">Autonomous nationwide drug-recall defense \u00b7 Live data: <a href="https://open.fda.gov/apis/drug/enforcement/" target="_blank" rel="noopener">openFDA Drug Enforcement</a></div></div>
       <div class="stats">${stats&&[["Recalls indexed",stats.total_recalls],["Patients indexed",stats.total_customers_indexed],
         ["Pharmacies",stats.total_pharmacies],["Matches",stats.total_alerts]].map(([l,v])=>html`
         <div class="stat" key=${l}><div class="v">${fmt(v)}</div><div class="l">${l}</div></div>`)}</div>
       <button class="run-btn" onClick=${launch} disabled=${running}>
-        ${running?"\u25CF Defense running\u2026":"\u25B6 Launch live defense"}</button>
+        ${running?"\u25CF Defending\u2026":"\u25B6 Launch live defense"}</button>
     </header>
 
     <div class="stepper">${STAGES.map(([id,lbl,icon])=>{
@@ -405,7 +442,7 @@ function App() {
 
     <main>
       <div class="card">
-        <h3>\uD83D\uDDFA\uFE0F Nationwide alert fan-out</h3>
+        <h3>\uD83D\uDDFA\uFE0F Nationwide alert fan-out${rec&&rec.recall_number?html` \u00b7 <span style=${{color:"#2563eb"}}>${rec.recall_number}</span>`:""}</h3>
         <div class="mapwrap">
           <${USMap} stateCust=${stateCust} statePharm=${statePharm} network=${network} affected=${affected} />
           <div class="map-totals">
@@ -423,20 +460,8 @@ function App() {
         </div>
       </div>
 
-      <div class="card">
-        <h3>\uD83D\uDD0E Live action ${recalls.length?"\u00b7 "+recalls.length+" recalls processed":""}</h3>
-        <${RecallList} recalls=${recalls} activeRn=${activeRn} activeCard=${activeCard} />
-      </div>
+      <${StageGrid} rec=${rec} activeCard=${activeCard} />
     </main>
-
-    <footer>
-      <div class="feed"><h4>Recall feed</h4><div class="feed-scroll">
-        ${feed.length===0&&html`<div style=${{color:"#94a3b8",fontSize:"12px",padding:"6px"}}>Recalls appear here as detected.</div>`}
-        ${feed.map((f,i)=>html`<div class="feed-item" key=${i}><div class="firm">${f.firm}</div>
-          <div class="meta">${f.rn} \u00b7 NDC ${f.ndc}</div></div>`)}</div></div>
-      <div class="logbox"><h4>Event stream</h4><div class="log-scroll">
-        ${log.map((r,i)=>html`<div class="log-row" key=${i}><span class="tag">${r.stage}</span><span class="rn">${r.rn}</span></div>`)}</div></div>
-    </footer>
   </div>`;
 }
 
